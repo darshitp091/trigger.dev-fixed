@@ -20,7 +20,11 @@ if [ -n "$CLICKHOUSE_URL" ] && [ "$SKIP_CLICKHOUSE_MIGRATIONS" != "1" ]; then
 
   # Goose derives TLS from the URL scheme. Strip any existing secure query
   # parameter and only set secure=true for https URLs.
-  export GOOSE_DBSTRING="$(node -e 'const url = new URL(process.env.CLICKHOUSE_URL); url.searchParams.delete("secure"); if (url.protocol === "https:") { url.searchParams.set("secure", "true"); } process.stdout.write(url.toString());')"
+  build_goose_dbstring() {
+    CLICKHOUSE_URL="$1" node -e 'const url = new URL(process.env.CLICKHOUSE_URL); url.searchParams.delete("secure"); if (url.protocol === "https:") { url.searchParams.set("secure", "true"); } process.stdout.write(url.toString());'
+  }
+
+  export GOOSE_DBSTRING="$(build_goose_dbstring "$CLICKHOUSE_URL")"
   
   export GOOSE_MIGRATION_DIR=/triggerdotdev/internal-packages/clickhouse/schema
   /usr/local/bin/goose up
